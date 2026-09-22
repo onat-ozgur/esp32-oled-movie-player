@@ -1,15 +1,6 @@
-# 🎬 Watching The Odyssey on a 0.96" OLED (The Way Sir Nolan Intended)
+# 🎬 Watching The Odyssey on a 0.96" OLED (As Nolan Imagined It)
 
 > *"Cinema belongs on the grandest screens... or a 0.96-inch monochrome I2C display."*
-
-<p align="center">
-  <img src="demo.gif" alt="The Odyssey on ESP32 OLED Demo" width="420">
-</p>
-
-<p align="center">
-  <b>128×64 1-Bit Dithered Video</b> • <b>8 kHz Synchronized DAC Audio</b> • <b>Pure ESP32 Hardware</b>
-</p>
-
 ---
 
 ## 📽️ Project Overview
@@ -25,13 +16,13 @@ Standard microcontrollers struggle with real-time video decoding. This project c
 
 ## ⚡ Hardware Requirements
 
-| Component | Quantity | Notes |
-| :--- | :---: | :--- |
-| **ESP32 Dev Module** | 1 | Standard 30/38-pin board (ESP-WROOM-32 / ESP32-U) |
-| **0.96" I2C OLED Display** | 1 | 128×64 SSD1306 driver (I2C address `0x3C`) |
-| **Mini Speaker** | 1 | 8Ω (0.5W – 1W) |
-| **Current-Limiting Resistor** | 1 | 100Ω – 220Ω (Series protection for DAC pin) |
-| **Capacitor (Optional)** | 1 | 100µF electrolytic (DC-blocking filter) |
+| Component ||
+| :--- | :---: |
+| **ESP32 Dev Module** |
+| **0.96" I2C OLED Display** |
+| **Mini Speaker** |
+| **Current-Limiting Resistor** | 220Ω|
+| **Capacitor** | 100µF (DC-blocking filter) |
 
 ---
 
@@ -53,54 +44,44 @@ Standard microcontrollers struggle with real-time video decoding. This project c
      +---------------+             +--------------------+
 ```
 
-> ⚠️ **Important:** Never connect an 8Ω speaker directly to ESP32 GPIO 25 without a current-limiting resistor (100Ω–220Ω). Excessive current draw can permanently damage the internal DAC driver.
-
 ---
 
 ## 📂 Repository Structure
 
 ```text
 ├── demo.gif                   # Showcase preview animation
-├── donusturucu.py             # Python converter script (MP4 -> video_data.h)
-├── esp32_video_player/
-│   ├── esp32_video_player.ino # Main Arduino firmware
+├── donusturucu.py             # Python Converter Script (MP4 -> video_data.h)
+├── esp32_video/
+│   ├── esp32_video.ino        # Main Arduino firmware
 │   └── video_data.h           # Pre-converted Odyssey clip (Ready to flash)
 └── README.md                  # Project documentation
 ```
 
 ---
 
-## 🚀 Quick Start Guide
+## 🔄 Video Preprocessing & Asset Generation
 
-### Option A: Flash the Pre-Converted Clip (No Python Needed)
+Because the ESP32 lacks the compute power to decode MP4 on the fly, I implemented an offline preprocessing pipeline using Python (`OpenCV`, `NumPy`, and `MoviePy`):
 
-This repository includes a ready-to-test clip in `esp32_video_player/video_data.h`.
+* **Audio Extraction & Resampling:** The soundtrack is extracted, mixed down to mono, resampled to 8 kHz, and normalized to 8-bit unsigned values (`0–255`) suitable for direct DAC register writes.
+* **Spatial Scaling & Dithering:** Each video frame is extracted at 15 FPS, scaled down to 128×64, and dithered using the Floyd-Steinberg error diffusion algorithm to simulate multi-tone grayscale on a monochrome 1-bit screen.
+* **Bit-Packing & Header Generation:** Pixels are bit-packed using `numpy.packbits` (8 pixels per byte, exactly 1024 bytes per frame) and serialized directly into a C header (`video_data.h`) using the `PROGMEM` flash attribute.
 
-1. Open `esp32_video_player/esp32_video_player.ino` in the Arduino IDE.
-2. Install the required libraries via the Library Manager:
-   * **Adafruit SSD1306**
-   * **Adafruit GFX Library**
-3. Configure the flash partition scheme to accommodate video assets:
-   * Navigate to: **Tools** > **Partition Scheme** > **Huge APP (3MB No OTA/1MB SPIFFS)**.
-4. Select your ESP32 board and COM port, then click **Upload**.
 
----
 
-### Option B: Convert Your Own Clip
 
-To convert any custom video into embedded C headers:
 
-1. Install Python dependencies:
-   ```bash
-   pip install opencv-python numpy moviepy
-   ```
-2. Place your video in the project root directory and name it `video.mp4` *(5–8 seconds recommended due to flash limits)*.
-3. Run the conversion script:
-   ```bash
-   python donusturucu.py
-   ```
-4. Move the newly generated `video_data.h` into the `esp32_video_player/` directory (replacing the existing file).
-5. Compile and flash the sketch to the ESP32.
+
+
+
+https://github.com/user-attachments/assets/f7dcd32d-6e1f-4599-aaf7-add715ea5c9d
+
+
+
+
+
+
+
 
 ---
 
